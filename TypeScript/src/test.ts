@@ -47,7 +47,7 @@ import { UserAuthTicket } from './lib/AuthClient';
       `
     })
 
-    console.log(results);
+    console.log(results?.data?.products?.items);
   } catch (ex) {
     console.log(ex);
   }

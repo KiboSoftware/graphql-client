@@ -68,7 +68,7 @@ export default class TicketManager {
   private _refreshTicket: (authTicket?: UserAuthTicket) => Promise<UserAuthTicket> = async authTicket => {
     if (!this._authClient) return Promise.reject('No implementation for AuthClient provided.');
 
-    const refresh = (authTicket !== null && authTicket !== undefined && authTicket.parsedJWT?.['https://www.kibocommerce.com/user_claims']?.anon !== "1" && authTicket.refreshToken && new Date() < authTicket.refreshTokenExpiration);
+    const refresh = (authTicket !== null && authTicket !== undefined && authTicket.refreshToken && new Date() < authTicket.refreshTokenExpiration);
 
     const newTicketPromise = refresh && authTicket !== null && authTicket !== undefined ?
       this._performTicketRefresh(authTicket) :

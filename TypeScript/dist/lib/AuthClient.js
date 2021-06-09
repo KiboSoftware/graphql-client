@@ -36,7 +36,7 @@ class AuthClient {
             }
             return auth;
         };
-        this._executeRequest = async (url, method, body) => {
+        this._executeRequest = async (url, method, body, userToken) => {
             var _a;
             await this._ensureAuthTicket();
             const options = {
@@ -47,6 +47,9 @@ class AuthClient {
                 method,
                 body
             };
+            if (userToken) {
+                options.headers['x-vol-user-claims'] = userToken;
+            }
             const resp = await isomorphic_fetch_1.default(url, options);
             if (!resp.ok && resp.status === 401 && !this._reauth) {
                 this._reauth = true;
@@ -57,8 +60,14 @@ class AuthClient {
             return this._formatTicket(await resp.json());
         };
         this.anonymousAuth = () => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets/anonymousshopper`, 'GET');
-        this.customerPasswordAuth = (request) => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets`, 'POST', request);
-        this.refreshUserAuth = async ({ refreshToken }) => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets/refresh/?refreshToken=${refreshToken}`, 'PUT');
+        this.customerPasswordAuth = (request, ticket) => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets`, 'POST', request, ticket === null || ticket === void 0 ? void 0 : ticket.accessToken);
+        this.refreshUserAuth = async ({ refreshToken, accessToken }) => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets/refresh/?refreshToken=${refreshToken}`, 'PUT', undefined, accessToken);
+        this.getAppAuthToken = async () => {
+            await this._ensureAuthTicket();
+            if (this._authClientTicket !== undefined && this._authClientTicket !== null && this._authClientTicket.access_token !== null)
+                return this._authClientTicket.access_token;
+            return '';
+        };
         this._config = config;
     }
 }
