@@ -39,23 +39,24 @@ export interface BeforeAuthArgs {
 }
 
 
-const handleBeforeAuth: (arg: BeforeAuthArgs) => Promise<UserAuthTicket> = async ({ authClient, ticketManager, apolloReq, currentTicket }) => {
+const handleBeforeAuth: (arg: BeforeAuthArgs) => Promise<string> = async ({ authClient, ticketManager, apolloReq, currentTicket }) => {
   if (!currentTicket) {
     const ticket = await authClient.anonymousAuth();
     ticketManager.setTicket(ticket);
-    return ticket;
+    currentTicket = ticket;
+    return ticket.accessToken;
   }
-  return ticketManager.getTicket();
+  return (await ticketManager.getTicket()).accessToken;
 }
 
-const handleRetry: (obj: { ticketManager: TicketManager}) => (count: number, operation: any, error: any) => boolean = ({ ticketManager }) => (count, _, error) => {
+const handleRetry: (obj: { ticketManager: TicketManager}) => (count: number, operation: any, error: any) => Promise<boolean> = ({ ticketManager }) => async (count, _, error) => {
   if (count > 3) {
     return false;
   }
 
   if (error?.result?.message === 'invalid_token') {
     // Logger.debug(`Apollo retry-link, the operation (${operation.operationName}) sent with wrong token, creating a new one... (attempt: ${count})`);
-    ticketManager.invalidateTicket();
+    await ticketManager.getTicket();
     return true;
   }
 
@@ -79,6 +80,7 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
   
   const ticketManager = new TicketManager({
     authClient,
+    ticket: currentTicket,
     storageManager: {
       ticketFetcher: (authClient) => authClient.anonymousAuth(),
       onTicketChanged: (authTicket) => {
@@ -117,12 +119,14 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
   });
   
   const authLinkBefore: ApolloLink = setContext(async (apolloReq, { headers }) => {
-    currentTicket = await handleBeforeAuth({ authClient, ticketManager, apolloReq, currentTicket });
+    const userToken = await handleBeforeAuth({ authClient, ticketManager, apolloReq, currentTicket });
+    const appToken = await authClient.getAppAuthToken();
 
     return {
       headers: {
         ...headers,
-        Authorization: `Bearer ${currentTicket.jwtAccessToken}`
+        Authorization: `Bearer ${appToken}`,
+        'x-vol-user-claims': userToken
       }
     }
   });

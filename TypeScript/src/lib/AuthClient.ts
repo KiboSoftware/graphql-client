@@ -90,9 +90,19 @@ export default class AuthClient {
     return auth;
   }
 
-  private _executeRequest: (url: string, method: string, body?: any) => Promise<any> = async (url, method, body) => {
+  private _executeRequest: (url: string, method: string, body?: any, userToken?: string) => Promise<any> = async (url, method, body, userToken) => {
     await this._ensureAuthTicket();
-    const options = {
+    const options: {
+      headers: {
+        Authorization: string;
+        'Content-Type': string;
+        'x-vol-user-claims'?: string;
+        [x: string]: any;
+      };
+      method: string;
+      body?: any;
+      [x: string]: any;
+    } = {
       headers: {
         'Authorization': `Bearer ${this._authClientTicket?.access_token}`,
         'Content-Type': 'application/json'
@@ -100,6 +110,9 @@ export default class AuthClient {
       method,
       body
     };
+    if (userToken) {
+      options.headers['x-vol-user-claims'] = userToken;
+    }
     const resp = await fetch(url, options);
   
     if (!resp.ok && resp.status === 401 && !this._reauth) {
@@ -117,6 +130,12 @@ export default class AuthClient {
   }
 
   anonymousAuth: () => Promise<UserAuthTicket> = () => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets/anonymousshopper`, 'GET'); 
-  customerPasswordAuth: (request: { username: string; password: string; }) => Promise<UserAuthTicket> = (request) => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets`, 'POST', request);
-  refreshUserAuth: (ticket: UserAuthTicket) => Promise<UserAuthTicket> = async ({ refreshToken }) => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets/refresh/?refreshToken=${refreshToken}`, 'PUT');
+  customerPasswordAuth: (request: { username: string; password: string; }, ticket?: UserAuthTicket) => Promise<UserAuthTicket> = (request, ticket) => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets`, 'POST', request, ticket?.accessToken);
+  refreshUserAuth: (ticket: UserAuthTicket) => Promise<UserAuthTicket> = async ({ refreshToken, accessToken }) => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets/refresh/?refreshToken=${refreshToken}`, 'PUT', undefined, accessToken);
+  getAppAuthToken: () => Promise<string> = async () => {
+    await this._ensureAuthTicket();
+    if (this._authClientTicket !== undefined && this._authClientTicket !== null && this._authClientTicket.access_token !== null)
+      return this._authClientTicket.access_token;
+    return '';
+  }
 }

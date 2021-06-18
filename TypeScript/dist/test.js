@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const graphql_tag_1 = __importDefault(require("graphql-tag"));
 const _1 = require(".");
 (async function () {
+    var _a, _b;
     let rawTicket = "";
     let ticket = undefined;
     let clientAuthHooks = {
@@ -45,7 +46,7 @@ const _1 = require(".");
         }
       `
         });
-        console.log(results);
+        console.log((_b = (_a = results === null || results === void 0 ? void 0 : results.data) === null || _a === void 0 ? void 0 : _a.products) === null || _b === void 0 ? void 0 : _b.items);
     }
     catch (ex) {
         console.log(ex);

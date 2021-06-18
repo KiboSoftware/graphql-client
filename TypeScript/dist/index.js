@@ -18,18 +18,19 @@ const handleBeforeAuth = async ({ authClient, ticketManager, apolloReq, currentT
     if (!currentTicket) {
         const ticket = await authClient.anonymousAuth();
         ticketManager.setTicket(ticket);
-        return ticket;
+        currentTicket = ticket;
+        return ticket.accessToken;
     }
-    return ticketManager.getTicket();
+    return (await ticketManager.getTicket()).accessToken;
 };
-const handleRetry = ({ ticketManager }) => (count, _, error) => {
+const handleRetry = ({ ticketManager }) => async (count, _, error) => {
     var _a;
     if (count > 3) {
         return false;
     }
     if (((_a = error === null || error === void 0 ? void 0 : error.result) === null || _a === void 0 ? void 0 : _a.message) === 'invalid_token') {
         // Logger.debug(`Apollo retry-link, the operation (${operation.operationName}) sent with wrong token, creating a new one... (attempt: ${count})`);
-        ticketManager.invalidateTicket();
+        await ticketManager.getTicket();
         return true;
     }
     return false;
@@ -49,6 +50,7 @@ function CreateApolloClient(config) {
     const authClient = new AuthClient_1.default(config.api);
     const ticketManager = new TicketManager_1.default({
         authClient,
+        ticket: currentTicket,
         storageManager: {
             ticketFetcher: (authClient) => authClient.anonymousAuth(),
             onTicketChanged: (authTicket) => {
@@ -81,9 +83,10 @@ function CreateApolloClient(config) {
         delay: () => 0
     });
     const authLinkBefore = apollo_link_context_1.setContext(async (apolloReq, { headers }) => {
-        currentTicket = await handleBeforeAuth({ authClient, ticketManager, apolloReq, currentTicket });
+        const userToken = await handleBeforeAuth({ authClient, ticketManager, apolloReq, currentTicket });
+        const appToken = await authClient.getAppAuthToken();
         return {
-            headers: Object.assign(Object.assign({}, headers), { Authorization: `Bearer ${currentTicket.jwtAccessToken}` })
+            headers: Object.assign(Object.assign({}, headers), { Authorization: `Bearer ${appToken}`, 'x-vol-user-claims': userToken })
         };
     });
     const httpLink = apollo_link_http_1.createHttpLink({

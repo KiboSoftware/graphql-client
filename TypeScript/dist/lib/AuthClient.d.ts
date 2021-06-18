@@ -61,7 +61,8 @@ export default class AuthClient {
     customerPasswordAuth: (request: {
         username: string;
         password: string;
-    }) => Promise<UserAuthTicket>;
+    }, ticket?: UserAuthTicket) => Promise<UserAuthTicket>;
     refreshUserAuth: (ticket: UserAuthTicket) => Promise<UserAuthTicket>;
+    getAppAuthToken: () => Promise<string>;
 }
 //# sourceMappingURL=AuthClient.d.ts.map
