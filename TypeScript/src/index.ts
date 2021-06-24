@@ -75,6 +75,8 @@ const isValidConfig: (config: KiboApolloClientConfig) => boolean = config => {
   return true;
 }
 
+const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;
+
 export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloClient {
   let currentTicket: UserAuthTicket = config.clientAuthHooks.onTicketRead();
 
@@ -138,20 +140,24 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
     uri: config.api.apiHost + '/graphql',
     fetch: (uri, options) => {
       if ("HTTP_PROXY" in process.env && uri.toString().indexOf('http:') === 0) {
-        process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-        const response = fetch(uri, {
-          ...options,
-          agent: new httpProxy.HttpProxyAgent(process.env.HTTP_PROXY as string)
-        } as any)
-        return response;
+        if (process.env.HTTP_PROXY?.match(urlRegex)) {
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+          const response = fetch(uri, {
+            ...options,
+            agent: new httpProxy.HttpProxyAgent(process.env.HTTP_PROXY as string)
+          } as any)
+          return response;
+        }
       }
       if ("HTTPS_PROXY" in process.env && uri.toString().indexOf('https:') === 0) {
-        process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-        const response = fetch(uri, {
-          ...options,
-          agent: new httpsProxy.HttpsProxyAgent(process.env.HTTPS_PROXY as string)
-        } as any)
-        return response;
+        if (process.env.HTTPS_PROXY?.match(urlRegex)) {
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+          const response = fetch(uri, {
+            ...options,
+            agent: new httpsProxy.HttpsProxyAgent(process.env.HTTPS_PROXY as string)
+          } as any)
+          return response;
+        }
       }
       return fetch(uri, options);
     }
