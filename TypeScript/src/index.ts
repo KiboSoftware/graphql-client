@@ -8,6 +8,8 @@ import { onError } from 'apollo-link-error';
 import AuthClient, { UserAuthTicket } from './lib/AuthClient';
 import TicketManager from './lib/TicketManager';
 import fetch from 'isomorphic-fetch';
+import httpProxy from 'http-proxy-agent';
+import httpsProxy from 'https-proxy-agent';
 
 export interface KiboApolloApiConfig {
   accessTokenUrl: string;
@@ -22,7 +24,7 @@ export interface KiboApolloClientConfig {
     onTicketChange: (authTicket: UserAuthTicket) => void;
     onTicketRead: () => UserAuthTicket;
     onTicketRemove: () => void;
-  }
+  };
 }
 
 export interface KiboApolloClient extends ApolloClient<any> {
@@ -119,6 +121,7 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
   });
   
   const authLinkBefore: ApolloLink = setContext(async (apolloReq, { headers }) => {
+    currentTicket = config.clientAuthHooks.onTicketRead();
     const userToken = await handleBeforeAuth({ authClient, ticketManager, apolloReq, currentTicket });
     const appToken = await authClient.getAppAuthToken();
 
@@ -133,7 +136,25 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
 
   const httpLink = createHttpLink({
     uri: config.api.apiHost + '/graphql',
-    fetch
+    fetch: (uri, options) => {
+      if ("HTTP_PROXY" in process.env && uri.toString().indexOf('http:') === 0) {
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+        const response = fetch(uri, {
+          ...options,
+          agent: new httpProxy.HttpProxyAgent(process.env.HTTP_PROXY as string)
+        } as any)
+        return response;
+      }
+      if ("HTTPS_PROXY" in process.env && uri.toString().indexOf('https:') === 0) {
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+        const response = fetch(uri, {
+          ...options,
+          agent: new httpsProxy.HttpsProxyAgent(process.env.HTTPS_PROXY as string)
+        } as any)
+        return response;
+      }
+      return fetch(uri, options);
+    }
   });
 
   const client = new ApolloClient({

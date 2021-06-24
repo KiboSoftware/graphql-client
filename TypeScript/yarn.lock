@@ -83,6 +83,11 @@
     "@nodelib/fs.scandir" "2.1.4"
     "fastq" "^1.6.0"
 
+"@tootallnate/once@1":
+  "integrity" "sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw=="
+  "resolved" "https://registry.npmjs.org/@tootallnate/once/-/once-1.1.2.tgz"
+  "version" "1.1.2"
+
 "@types/async-retry@1.2.1":
   "integrity" "sha512-yMQ6CVgICWtyFNBqJT3zqOc+TnqqEPLo4nKJNPFwcialiylil38Ie6q1ENeFTjvaLOkVim9K5LisHgAKJWidGQ=="
   "resolved" "https://registry.npmjs.org/@types/async-retry/-/async-retry-1.2.1.tgz"
@@ -318,6 +323,13 @@
   "integrity" "sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A=="
   "resolved" "https://registry.npmjs.org/acorn/-/acorn-7.4.1.tgz"
   "version" "7.4.1"
+
+"agent-base@6":
+  "integrity" "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ=="
+  "resolved" "https://registry.npmjs.org/agent-base/-/agent-base-6.0.2.tgz"
+  "version" "6.0.2"
+  dependencies:
+    "debug" "4"
 
 "agentkeepalive@3.4.1":
   "integrity" "sha512-MPIwsZU9PP9kOrZpyu2042kYA8Fdt/AedQYkYXucHgF9QoD9dXVp0ypuGnHXSR0hTstBxdt85Xkh4JolYfK5wg=="
@@ -652,7 +664,7 @@
   dependencies:
     "ms" "^2.1.1"
 
-"debug@^4.0.1", "debug@^4.1.1":
+"debug@^4.0.1", "debug@^4.1.1", "debug@4":
   "integrity" "sha512-doEwdvm4PCeK4K3RQN2ZC2BYUBaxwLARCqZmMjtF8a51J2Rb0xpVloFRnCODwqjpwnAoao4pelN8l3RJdv3gRQ=="
   "resolved" "https://registry.npmjs.org/debug/-/debug-4.3.1.tgz"
   "version" "4.3.1"
@@ -1094,6 +1106,23 @@
     "statuses" ">= 1.5.0 < 2"
     "toidentifier" "1.0.0"
 
+"http-proxy-agent@^4.0.1":
+  "integrity" "sha512-k0zdNgqWTGA6aeIRVpvfVob4fL52dTfaehylg0Y4UvSySvOq/Y+BOyPrgpUrA7HylqvU8vIZGsRuXmspskV0Tg=="
+  "resolved" "https://registry.npmjs.org/http-proxy-agent/-/http-proxy-agent-4.0.1.tgz"
+  "version" "4.0.1"
+  dependencies:
+    "@tootallnate/once" "1"
+    "agent-base" "6"
+    "debug" "4"
+
+"https-proxy-agent@^5.0.0":
+  "integrity" "sha512-EkYm5BcKUGiduxzSt3Eppko+PiNWNEpa4ySk9vTC6wDsQJW9rHSa+UhGNJoRYp7bz6Ht1eaRIa6QaJqO5rCFbA=="
+  "resolved" "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-5.0.0.tgz"
+  "version" "5.0.0"
+  dependencies:
+    "agent-base" "6"
+    "debug" "4"
+
 "humanize-ms@^1.2.1":
   "integrity" "sha1-xG4xWaKT9riW2ikxbYtv6Lt5u+0="
   "resolved" "https://registry.npmjs.org/humanize-ms/-/humanize-ms-1.2.1.tgz"
@@ -1199,7 +1228,7 @@
   "resolved" "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz"
   "version" "4.0.0"
 
-"js-yaml@^3.13.1", "js-yaml@^3.14.1":
+"js-yaml@^3.13.1":
   "integrity" "sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g=="
   "resolved" "https://registry.npmjs.org/js-yaml/-/js-yaml-3.14.1.tgz"
   "version" "3.14.1"
