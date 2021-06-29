@@ -77,12 +77,12 @@ class TicketManager {
         };
         this.invalidateTicket = () => {
             this._authTicket = undefined;
+            this._storageManager.onTicketRemoved();
         };
         this._authClient = options.authClient;
         this._storageManager = options.storageManager;
-        if (options.ticket) {
-            this.setTicket(options.ticket);
-        }
+        if (options.ticket)
+            this._authTicket = options.ticket;
     }
 }
 exports.default = TicketManager;

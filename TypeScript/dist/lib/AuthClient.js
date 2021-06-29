@@ -5,6 +5,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const isomorphic_fetch_1 = __importDefault(require("isomorphic-fetch"));
 const jwt_decode_1 = __importDefault(require("jwt-decode"));
+const http_proxy_agent_1 = __importDefault(require("http-proxy-agent"));
+const https_proxy_agent_1 = __importDefault(require("https-proxy-agent"));
+const node_cache_1 = __importDefault(require("node-cache"));
+const myCache = new node_cache_1.default();
+;
+const addProxy = (options, atUrl) => {
+    if ("HTTP_PROXY" in process.env && atUrl.indexOf('http:') === 0) {
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+        options.agent = new http_proxy_agent_1.default.HttpProxyAgent(process.env.HTTP_PROXY);
+    }
+    else if ("HTTPS_PROXY" in process.env && atUrl.indexOf('https:') === 0) {
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+        options.agent = new https_proxy_agent_1.default.HttpsProxyAgent(process.env.HTTPS_PROXY);
+    }
+    return options;
+};
 class AuthClient {
     constructor(config) {
         this._authClientTicket = null;
@@ -16,16 +32,19 @@ class AuthClient {
                     client_secret: this._config.sharedSecret,
                     grant_type: 'client_credentials'
                 };
-                const authResponse = await isomorphic_fetch_1.default(this._config.accessTokenUrl, {
+                let authOptions = {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(appTokenPostData)
-                }).then(resp => resp.json());
+                };
+                addProxy(authOptions, this._config.accessTokenUrl.toString());
+                const authResponse = await isomorphic_fetch_1.default(this._config.accessTokenUrl, authOptions).then(resp => resp.json());
                 authResponse.expires_at = new Date();
                 authResponse.expires_at.setSeconds(authResponse.expires_at.getSeconds() + authResponse.expires_in);
                 this._authClientTicket = authResponse;
+                myCache.set("authClientTicket", authResponse);
             }
         };
         this._formatTicket = (auth) => {
@@ -50,6 +69,7 @@ class AuthClient {
             if (userToken) {
                 options.headers['x-vol-user-claims'] = userToken;
             }
+            addProxy(options, this._config.accessTokenUrl.toString());
             const resp = await isomorphic_fetch_1.default(url, options);
             if (!resp.ok && resp.status === 401 && !this._reauth) {
                 this._reauth = true;
@@ -69,6 +89,10 @@ class AuthClient {
             return '';
         };
         this._config = config;
+        const authTicket = myCache.get("authClientTicket");
+        if (authTicket) {
+            this._authClientTicket = authTicket;
+        }
     }
 }
 exports.default = AuthClient;

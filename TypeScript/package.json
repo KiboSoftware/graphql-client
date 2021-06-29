@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Kibo Apollo Client for TypeScript",
   "main": "dist/index.js",
-  "types": "src/index.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "node dist/test.js",
     "pretest": "tsc",
@@ -13,7 +13,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/isomorphic-fetch": "^0.0.35",
-    "@types/node": "^15.0.2",
+    "@types/node": "^15.12.5",
     "@typescript-eslint/eslint-plugin": "^4.23.0",
     "@typescript-eslint/parser": "^4.23.0",
     "@vercel/fetch": "^6.1.0",
@@ -34,6 +34,8 @@
     "http-proxy-agent": "^4.0.1",
     "https-proxy-agent": "^5.0.0",
     "isomorphic-fetch": "^3.0.0",
-    "jwt-decode": "^3.1.2"
+    "jest": "^27.0.5",
+    "jwt-decode": "^3.1.2",
+    "node-cache": "^5.1.2"
   }
 }

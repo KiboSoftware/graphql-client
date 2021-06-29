@@ -5,6 +5,7 @@ export interface TicketStorageManager {
   ticketFetcher: (client: AuthClient) => Promise<UserAuthTicket>;
   onTicketChanged: (ticket: UserAuthTicket) => void;
   onTicketRefreshed: (ticket: UserAuthTicket) => void;
+  onTicketRemoved: () => void;
 }
 
 export interface TicketManagerOptions {
@@ -24,9 +25,7 @@ export default class TicketManager {
   constructor(options: TicketManagerOptions) {
     this._authClient = options.authClient;
     this._storageManager = options.storageManager;
-    if (options.ticket) {
-      this.setTicket(options.ticket);
-    }
+    if (options.ticket) this._authTicket = options.ticket;
   }
 
   /// Private Methods
@@ -105,6 +104,7 @@ export default class TicketManager {
 
   invalidateTicket: () => void = () => {
     this._authTicket = undefined;
+    this._storageManager.onTicketRemoved();
   }
 
   /// Static Methods

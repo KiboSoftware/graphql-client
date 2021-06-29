@@ -24,7 +24,7 @@ export interface BeforeAuthArgs {
     authClient: AuthClient;
     ticketManager: TicketManager;
     apolloReq: any;
-    currentTicket: UserAuthTicket;
+    currentTicket?: UserAuthTicket;
 }
 export declare function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloClient;
 //# sourceMappingURL=index.d.ts.map
