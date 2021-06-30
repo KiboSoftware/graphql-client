@@ -4,6 +4,7 @@ export interface TicketStorageManager {
     ticketFetcher: (client: AuthClient) => Promise<UserAuthTicket>;
     onTicketChanged: (ticket: UserAuthTicket) => void;
     onTicketRefreshed: (ticket: UserAuthTicket) => void;
+    onTicketRemoved: () => void;
 }
 export interface TicketManagerOptions {
     authClient: AuthClient;

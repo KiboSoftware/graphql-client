@@ -1,6 +1,11 @@
 import fetch from 'isomorphic-fetch';
 import jwt_decode from 'jwt-decode';
 import { KiboApolloApiConfig } from '..';
+import httpProxy from 'http-proxy-agent';
+import httpsProxy from 'https-proxy-agent';
+import NodeCache from 'node-cache';
+
+const myCache = new NodeCache();
 
 export interface AppAuthTicket {
   access_token: string | null;
@@ -55,6 +60,27 @@ export interface UserAuthTicket {
   parsedJWT: KiboJWT;
 }
 
+export interface FetchOptions {
+  method: string;
+  headers: {
+    [x: string]: any;
+  };
+  body: string;
+  agent?: any;
+  [x: string]: any;
+};
+
+const addProxy = (options: FetchOptions, atUrl: string): FetchOptions => {
+  if ("HTTP_PROXY" in process.env && atUrl.indexOf('http:') === 0) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+    options.agent = new httpProxy.HttpProxyAgent(process.env.HTTP_PROXY as string);
+  } else if ("HTTPS_PROXY" in process.env && atUrl.indexOf('https:') === 0) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+    options.agent = new httpsProxy.HttpsProxyAgent(process.env.HTTPS_PROXY as string);
+  }
+  return options;
+}
+
 export default class AuthClient {
   private _authClientTicket: AppAuthTicket | null = null;
   private _reauth: boolean = false;
@@ -67,16 +93,21 @@ export default class AuthClient {
         client_secret: this._config.sharedSecret,
         grant_type: 'client_credentials'
       };
-      const authResponse = await fetch(this._config.accessTokenUrl, {
+      let authOptions: FetchOptions = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(appTokenPostData)
-      }).then(resp => resp.json()) as AppAuthTicket;
+      };
+
+      addProxy(authOptions, this._config.accessTokenUrl.toString());
+      
+      const authResponse = await fetch(this._config.accessTokenUrl, authOptions).then(resp => resp.json()) as AppAuthTicket;
       authResponse.expires_at = new Date();
       authResponse.expires_at.setSeconds(authResponse.expires_at.getSeconds() + authResponse.expires_in);
       this._authClientTicket = authResponse;
+      myCache.set("authClientTicket", authResponse);
     }
   };
 
@@ -92,17 +123,7 @@ export default class AuthClient {
 
   private _executeRequest: (url: string, method: string, body?: any, userToken?: string) => Promise<any> = async (url, method, body, userToken) => {
     await this._ensureAuthTicket();
-    const options: {
-      headers: {
-        Authorization: string;
-        'Content-Type': string;
-        'x-vol-user-claims'?: string;
-        [x: string]: any;
-      };
-      method: string;
-      body?: any;
-      [x: string]: any;
-    } = {
+    const options: FetchOptions = {
       headers: {
         'Authorization': `Bearer ${this._authClientTicket?.access_token}`,
         'Content-Type': 'application/json'
@@ -113,6 +134,9 @@ export default class AuthClient {
     if (userToken) {
       options.headers['x-vol-user-claims'] = userToken;
     }
+
+    addProxy(options, this._config.accessTokenUrl.toString());
+
     const resp = await fetch(url, options);
   
     if (!resp.ok && resp.status === 401 && !this._reauth) {
@@ -127,6 +151,10 @@ export default class AuthClient {
 
   constructor(config: KiboApolloApiConfig) {
     this._config = config;
+    const authTicket = myCache.get<AppAuthTicket>("authClientTicket");
+    if (authTicket) {
+      this._authClientTicket = authTicket;
+    }
   }
 
   anonymousAuth: () => Promise<UserAuthTicket> = () => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets/anonymousshopper`, 'GET'); 

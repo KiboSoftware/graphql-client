@@ -49,6 +49,15 @@ export interface UserAuthTicket {
     jwtAccessToken: string;
     parsedJWT: KiboJWT;
 }
+export interface FetchOptions {
+    method: string;
+    headers: {
+        [x: string]: any;
+    };
+    body: string;
+    agent?: any;
+    [x: string]: any;
+}
 export default class AuthClient {
     private _authClientTicket;
     private _reauth;

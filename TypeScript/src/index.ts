@@ -37,18 +37,18 @@ export interface BeforeAuthArgs {
   authClient: AuthClient;
   ticketManager: TicketManager;
   apolloReq: any;
-  currentTicket: UserAuthTicket;
+  currentTicket?: UserAuthTicket;
 }
 
 
-const handleBeforeAuth: (arg: BeforeAuthArgs) => Promise<string> = async ({ authClient, ticketManager, apolloReq, currentTicket }) => {
+const handleBeforeAuth: (arg: BeforeAuthArgs) => Promise<UserAuthTicket> = async ({ authClient, ticketManager, apolloReq, currentTicket }) => {
   if (!currentTicket) {
     const ticket = await authClient.anonymousAuth();
     ticketManager.setTicket(ticket);
     currentTicket = ticket;
-    return ticket.accessToken;
+    return ticket;
   }
-  return (await ticketManager.getTicket()).accessToken;
+  return await ticketManager.getTicket();
 }
 
 const handleRetry: (obj: { ticketManager: TicketManager}) => (count: number, operation: any, error: any) => Promise<boolean> = ({ ticketManager }) => async (count, _, error) => {
@@ -75,8 +75,10 @@ const isValidConfig: (config: KiboApolloClientConfig) => boolean = config => {
   return true;
 }
 
+const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;
+
 export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloClient {
-  let currentTicket: UserAuthTicket = config.clientAuthHooks.onTicketRead();
+  let currentTicket: UserAuthTicket | undefined = config.clientAuthHooks.onTicketRead();
 
   const authClient = new AuthClient(config.api);
   
@@ -87,9 +89,15 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
       ticketFetcher: (authClient) => authClient.anonymousAuth(),
       onTicketChanged: (authTicket) => {
         config.clientAuthHooks.onTicketChange(authTicket);
+        currentTicket = authTicket;
       },
       onTicketRefreshed: (authTicket) => {
         config.clientAuthHooks.onTicketChange(authTicket);
+        currentTicket = authTicket;
+      },
+      onTicketRemoved: () => {
+        config.clientAuthHooks.onTicketRemove();
+        currentTicket = undefined;
       }
     }
   });
@@ -121,15 +129,14 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
   });
   
   const authLinkBefore: ApolloLink = setContext(async (apolloReq, { headers }) => {
-    currentTicket = config.clientAuthHooks.onTicketRead();
-    const userToken = await handleBeforeAuth({ authClient, ticketManager, apolloReq, currentTicket });
+    currentTicket = await handleBeforeAuth({ authClient, ticketManager, apolloReq, currentTicket });
     const appToken = await authClient.getAppAuthToken();
 
     return {
       headers: {
         ...headers,
         Authorization: `Bearer ${appToken}`,
-        'x-vol-user-claims': userToken
+        'x-vol-user-claims': currentTicket?.accessToken
       }
     }
   });
@@ -137,21 +144,29 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
   const httpLink = createHttpLink({
     uri: config.api.apiHost + '/graphql',
     fetch: (uri, options) => {
+      options = {
+        ...options,
+        credentials: 'include'
+      };
       if ("HTTP_PROXY" in process.env && uri.toString().indexOf('http:') === 0) {
-        process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-        const response = fetch(uri, {
-          ...options,
-          agent: new httpProxy.HttpProxyAgent(process.env.HTTP_PROXY as string)
-        } as any)
-        return response;
+        if (process.env.HTTP_PROXY?.match(urlRegex)) {
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+          const response = fetch(uri, {
+            ...options,
+            agent: new httpProxy.HttpProxyAgent(process.env.HTTP_PROXY as string)
+          } as any)
+          return response;
+        }
       }
       if ("HTTPS_PROXY" in process.env && uri.toString().indexOf('https:') === 0) {
-        process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-        const response = fetch(uri, {
-          ...options,
-          agent: new httpsProxy.HttpsProxyAgent(process.env.HTTPS_PROXY as string)
-        } as any)
-        return response;
+        if (process.env.HTTPS_PROXY?.match(urlRegex)) {
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+          const response = fetch(uri, {
+            ...options,
+            agent: new httpsProxy.HttpsProxyAgent(process.env.HTTPS_PROXY as string)
+          } as any)
+          return response;
+        }
       }
       return fetch(uri, options);
     }

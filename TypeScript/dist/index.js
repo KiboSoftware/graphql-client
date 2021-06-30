@@ -21,9 +21,9 @@ const handleBeforeAuth = async ({ authClient, ticketManager, apolloReq, currentT
         const ticket = await authClient.anonymousAuth();
         ticketManager.setTicket(ticket);
         currentTicket = ticket;
-        return ticket.accessToken;
+        return ticket;
     }
-    return (await ticketManager.getTicket()).accessToken;
+    return await ticketManager.getTicket();
 };
 const handleRetry = ({ ticketManager }) => async (count, _, error) => {
     var _a;
@@ -47,6 +47,7 @@ const isValidConfig = config => {
         return false;
     return true;
 };
+const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;
 function CreateApolloClient(config) {
     let currentTicket = config.clientAuthHooks.onTicketRead();
     const authClient = new AuthClient_1.default(config.api);
@@ -57,9 +58,15 @@ function CreateApolloClient(config) {
             ticketFetcher: (authClient) => authClient.anonymousAuth(),
             onTicketChanged: (authTicket) => {
                 config.clientAuthHooks.onTicketChange(authTicket);
+                currentTicket = authTicket;
             },
             onTicketRefreshed: (authTicket) => {
                 config.clientAuthHooks.onTicketChange(authTicket);
+                currentTicket = authTicket;
+            },
+            onTicketRemoved: () => {
+                config.clientAuthHooks.onTicketRemove();
+                currentTicket = undefined;
             }
         }
     });
@@ -85,25 +92,30 @@ function CreateApolloClient(config) {
         delay: () => 0
     });
     const authLinkBefore = apollo_link_context_1.setContext(async (apolloReq, { headers }) => {
-        currentTicket = config.clientAuthHooks.onTicketRead();
-        const userToken = await handleBeforeAuth({ authClient, ticketManager, apolloReq, currentTicket });
+        currentTicket = await handleBeforeAuth({ authClient, ticketManager, apolloReq, currentTicket });
         const appToken = await authClient.getAppAuthToken();
         return {
-            headers: Object.assign(Object.assign({}, headers), { Authorization: `Bearer ${appToken}`, 'x-vol-user-claims': userToken })
+            headers: Object.assign(Object.assign({}, headers), { Authorization: `Bearer ${appToken}`, 'x-vol-user-claims': currentTicket === null || currentTicket === void 0 ? void 0 : currentTicket.accessToken })
         };
     });
     const httpLink = apollo_link_http_1.createHttpLink({
         uri: config.api.apiHost + '/graphql',
         fetch: (uri, options) => {
+            var _a, _b;
+            options = Object.assign(Object.assign({}, options), { credentials: 'include' });
             if ("HTTP_PROXY" in process.env && uri.toString().indexOf('http:') === 0) {
-                process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-                const response = isomorphic_fetch_1.default(uri, Object.assign(Object.assign({}, options), { agent: new http_proxy_agent_1.default.HttpProxyAgent(process.env.HTTP_PROXY) }));
-                return response;
+                if ((_a = process.env.HTTP_PROXY) === null || _a === void 0 ? void 0 : _a.match(urlRegex)) {
+                    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+                    const response = isomorphic_fetch_1.default(uri, Object.assign(Object.assign({}, options), { agent: new http_proxy_agent_1.default.HttpProxyAgent(process.env.HTTP_PROXY) }));
+                    return response;
+                }
             }
             if ("HTTPS_PROXY" in process.env && uri.toString().indexOf('https:') === 0) {
-                process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-                const response = isomorphic_fetch_1.default(uri, Object.assign(Object.assign({}, options), { agent: new https_proxy_agent_1.default.HttpsProxyAgent(process.env.HTTPS_PROXY) }));
-                return response;
+                if ((_b = process.env.HTTPS_PROXY) === null || _b === void 0 ? void 0 : _b.match(urlRegex)) {
+                    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+                    const response = isomorphic_fetch_1.default(uri, Object.assign(Object.assign({}, options), { agent: new https_proxy_agent_1.default.HttpsProxyAgent(process.env.HTTPS_PROXY) }));
+                    return response;
+                }
             }
             return isomorphic_fetch_1.default(uri, options);
         }
