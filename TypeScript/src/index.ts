@@ -31,6 +31,7 @@ export interface KiboApolloClient extends ApolloClient<any> {
   authClient: AuthClient;
   ticketManager: TicketManager;
   isValidConfig: (config: KiboApolloClientConfig) => boolean;
+  loginCustomerAndSetAuthTicket: (params: { username: string; password: string; }) => Promise<UserAuthTicket>;
 }
 
 export interface BeforeAuthArgs {
@@ -172,6 +173,16 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
     }
   });
 
+  const loginCustomerAndSetAuthTicket = async (params: { username: string; password: string; }) => {
+    const loginResponse = await authClient.customerPasswordAuth(params) as any
+    if (loginResponse && loginResponse.customerAccount) {
+      const authTicket = { ...loginResponse };
+      delete authTicket.customerAccount;
+      ticketManager.setTicket(authTicket);
+    }
+    return loginResponse
+  }
+
   const client = new ApolloClient({
     link: ApolloLink.from([errorHandlerLink, errorRetry, authLinkBefore.concat(httpLink)]),
     cache: new InMemoryCache()
@@ -180,6 +191,7 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
   (client as KiboApolloClient).isValidConfig = isValidConfig;
   (client as KiboApolloClient).authClient = authClient;
   (client as KiboApolloClient).ticketManager = ticketManager;
+  (client as KiboApolloClient).loginCustomerAndSetAuthTicket = loginCustomerAndSetAuthTicket;
 
   return client as KiboApolloClient;
 }
