@@ -129,7 +129,7 @@ export default class AuthClient {
         'Content-Type': 'application/json'
       },
       method,
-      body
+      body: body && typeof(body) === 'object' ? JSON.stringify(body) : body
     };
     if (userToken) {
       options.headers['x-vol-user-claims'] = userToken;
