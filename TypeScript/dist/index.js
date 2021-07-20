@@ -120,6 +120,15 @@ function CreateApolloClient(config) {
             return isomorphic_fetch_1.default(uri, options);
         }
     });
+    const loginCustomerAndSetAuthTicket = async (params) => {
+        const loginResponse = await authClient.customerPasswordAuth(params);
+        if (loginResponse && loginResponse.customerAccount) {
+            const authTicket = Object.assign({}, loginResponse);
+            delete authTicket.customerAccount;
+            ticketManager.setTicket(authTicket);
+        }
+        return loginResponse;
+    };
     const client = new apollo_client_1.ApolloClient({
         link: apollo_link_1.ApolloLink.from([errorHandlerLink, errorRetry, authLinkBefore.concat(httpLink)]),
         cache: new apollo_cache_inmemory_1.InMemoryCache()
@@ -127,6 +136,7 @@ function CreateApolloClient(config) {
     client.isValidConfig = isValidConfig;
     client.authClient = authClient;
     client.ticketManager = ticketManager;
+    client.loginCustomerAndSetAuthTicket = loginCustomerAndSetAuthTicket;
     return client;
 }
 exports.CreateApolloClient = CreateApolloClient;

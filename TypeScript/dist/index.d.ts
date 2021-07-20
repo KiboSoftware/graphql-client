@@ -19,6 +19,10 @@ export interface KiboApolloClient extends ApolloClient<any> {
     authClient: AuthClient;
     ticketManager: TicketManager;
     isValidConfig: (config: KiboApolloClientConfig) => boolean;
+    loginCustomerAndSetAuthTicket: (params: {
+        username: string;
+        password: string;
+    }) => Promise<UserAuthTicket>;
 }
 export interface BeforeAuthArgs {
     authClient: AuthClient;
