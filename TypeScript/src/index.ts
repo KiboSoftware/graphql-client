@@ -185,7 +185,7 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
 
   const client = new ApolloClient({
     link: ApolloLink.from([errorHandlerLink, errorRetry, authLinkBefore.concat(httpLink)]),
-    cache: new InMemoryCache()
+    cache: new InMemoryCache({ addTypename: false })
   });
 
   (client as KiboApolloClient).isValidConfig = isValidConfig;
