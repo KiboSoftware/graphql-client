@@ -79,8 +79,7 @@ class AuthClient {
                 return this._executeRequest(url, method, body);
             }
             this._reauth = false;
-            const json = await resp.json();
-            return exports.formatTicket(json);
+            return await resp.json();
         };
         this.anonymousAuth = () => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets/anonymousshopper`, 'GET');
         this.customerPasswordAuth = (request, ticket) => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets`, 'POST', request, ticket === null || ticket === void 0 ? void 0 : ticket.accessToken);

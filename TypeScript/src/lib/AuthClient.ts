@@ -144,10 +144,8 @@ export default class AuthClient {
       return this._executeRequest(url, method, body);
     }
     this._reauth = false;
-
-    const json = await resp.json();
   
-    return formatTicket(json as UserAuthTicket);
+    return await resp.json();
   }
 
   constructor(config: KiboApolloApiConfig) {
