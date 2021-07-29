@@ -58,7 +58,6 @@ export interface FetchOptions {
     agent?: any;
     [x: string]: any;
 }
-export declare const formatTicket: (auth: UserAuthTicket) => UserAuthTicket;
 export default class AuthClient {
     private _authClientTicket;
     private _reauth;

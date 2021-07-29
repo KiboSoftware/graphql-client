@@ -1,5 +1,4 @@
 import fetch from 'isomorphic-fetch';
-import jwt_decode from 'jwt-decode';
 import { KiboApolloApiConfig } from '..';
 import httpProxy from 'http-proxy-agent';
 import httpsProxy from 'https-proxy-agent';
@@ -79,15 +78,6 @@ const addProxy = (options: FetchOptions, atUrl: string): FetchOptions => {
     options.agent = new httpsProxy.HttpsProxyAgent(process.env.HTTPS_PROXY as string);
   }
   return options;
-}
-
-export const formatTicket: (auth: UserAuthTicket) => UserAuthTicket = (auth) => {
-  auth.accessTokenExpiration = new Date(auth.accessTokenExpiration);
-  auth.refreshTokenExpiration = new Date(auth.refreshTokenExpiration);
-  if (auth.jwtAccessToken && typeof auth.jwtAccessToken === "string") {
-    auth.parsedJWT = jwt_decode(auth.jwtAccessToken) as KiboJWT;
-  }  
-  return auth;
 }
 
 export default class AuthClient {

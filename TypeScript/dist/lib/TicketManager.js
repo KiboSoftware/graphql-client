@@ -1,6 +1,17 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const AuthClient_1 = require("./AuthClient");
+const jwt_decode_1 = __importDefault(require("jwt-decode"));
+const formatTicket = (auth) => {
+    auth.accessTokenExpiration = new Date(auth.accessTokenExpiration);
+    auth.refreshTokenExpiration = new Date(auth.refreshTokenExpiration);
+    if (auth.jwtAccessToken && typeof auth.jwtAccessToken === "string") {
+        auth.parsedJWT = jwt_decode_1.default(auth.jwtAccessToken);
+    }
+    return auth;
+};
 class TicketManager {
     constructor(options) {
         /// Private Methods
@@ -65,7 +76,7 @@ class TicketManager {
         this.setTicket = authTicket => {
             var _a, _b;
             this._validateTicket(authTicket);
-            this._authTicket = AuthClient_1.formatTicket(authTicket);
+            this._authTicket = formatTicket(authTicket);
             (_b = (_a = this._storageManager) === null || _a === void 0 ? void 0 : _a.onTicketChanged) === null || _b === void 0 ? void 0 : _b.call(_a, authTicket);
             return authTicket;
         };
@@ -86,7 +97,7 @@ class TicketManager {
         this._authClient = options.authClient;
         this._storageManager = options.storageManager;
         if (options.ticket)
-            this._authTicket = AuthClient_1.formatTicket(options.ticket);
+            this._authTicket = formatTicket(options.ticket);
     }
 }
 exports.default = TicketManager;
