@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const AuthClient_1 = require("./AuthClient");
 class TicketManager {
     constructor(options) {
         /// Private Methods
@@ -32,28 +33,31 @@ class TicketManager {
             if (this._ticketRefreshPromise)
                 return this._ticketRefreshPromise;
             this._ticketRefreshPromise = this._authClient.refreshUserAuth(authTicket);
-            return this._ticketRefreshPromise.then(resp => {
-                this._ticketRefreshPromise = undefined;
-                return resp;
-            }).catch(err => {
-                this._ticketRefreshPromise = undefined;
+            return this._ticketRefreshPromise.catch(err => {
                 throw err;
+            }).finally(() => {
+                this._ticketRefreshPromise = undefined;
             });
         };
         this._refreshTicket = async (authTicket) => {
             if (!this._authClient)
                 return Promise.reject('No implementation for AuthClient provided.');
-            const refresh = (authTicket !== null && authTicket !== undefined && authTicket.refreshToken && new Date() < authTicket.refreshTokenExpiration);
-            const newTicketPromise = refresh && authTicket !== null && authTicket !== undefined ?
-                this._performTicketRefresh(authTicket) :
-                this._performTicketFetch();
+            let newTicketPromise;
+            if (authTicket !== null && authTicket !== undefined) {
+                if (authTicket.refreshToken && new Date() < authTicket.refreshTokenExpiration) {
+                    newTicketPromise = this._performTicketRefresh(authTicket);
+                }
+                else {
+                    newTicketPromise = this._performTicketFetch();
+                }
+            }
+            else {
+                newTicketPromise = this._performTicketFetch();
+            }
             return newTicketPromise.then(ticket => {
                 var _a;
-                this._authTicket = ticket;
                 if ((_a = this._storageManager) === null || _a === void 0 ? void 0 : _a.onTicketRefreshed)
                     this._storageManager.onTicketRefreshed(ticket);
-                return ticket;
-            }).then(ticket => {
                 return this.setTicket(ticket);
             });
         };
@@ -61,7 +65,7 @@ class TicketManager {
         this.setTicket = authTicket => {
             var _a, _b;
             this._validateTicket(authTicket);
-            this._authTicket = authTicket;
+            this._authTicket = AuthClient_1.formatTicket(authTicket);
             (_b = (_a = this._storageManager) === null || _a === void 0 ? void 0 : _a.onTicketChanged) === null || _b === void 0 ? void 0 : _b.call(_a, authTicket);
             return authTicket;
         };
@@ -82,7 +86,7 @@ class TicketManager {
         this._authClient = options.authClient;
         this._storageManager = options.storageManager;
         if (options.ticket)
-            this._authTicket = options.ticket;
+            this._authTicket = AuthClient_1.formatTicket(options.ticket);
     }
 }
 exports.default = TicketManager;

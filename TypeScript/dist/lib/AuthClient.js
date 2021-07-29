@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.formatTicket = void 0;
 const isomorphic_fetch_1 = __importDefault(require("isomorphic-fetch"));
 const jwt_decode_1 = __importDefault(require("jwt-decode"));
 const http_proxy_agent_1 = __importDefault(require("http-proxy-agent"));
@@ -21,6 +22,15 @@ const addProxy = (options, atUrl) => {
     }
     return options;
 };
+const formatTicket = (auth) => {
+    auth.accessTokenExpiration = new Date(auth.accessTokenExpiration);
+    auth.refreshTokenExpiration = new Date(auth.refreshTokenExpiration);
+    if (auth.jwtAccessToken && typeof auth.jwtAccessToken === "string") {
+        auth.parsedJWT = jwt_decode_1.default(auth.jwtAccessToken);
+    }
+    return auth;
+};
+exports.formatTicket = formatTicket;
 class AuthClient {
     constructor(config) {
         this._authClientTicket = null;
@@ -47,14 +57,6 @@ class AuthClient {
                 myCache.set("authClientTicket", authResponse);
             }
         };
-        this._formatTicket = (auth) => {
-            auth.accessTokenExpiration = new Date(auth.accessTokenExpiration);
-            auth.refreshTokenExpiration = new Date(auth.refreshTokenExpiration);
-            if (auth.jwtAccessToken && typeof auth.jwtAccessToken === "string") {
-                auth.parsedJWT = jwt_decode_1.default(auth.jwtAccessToken);
-            }
-            return auth;
-        };
         this._executeRequest = async (url, method, body, userToken) => {
             var _a;
             await this._ensureAuthTicket();
@@ -77,7 +79,8 @@ class AuthClient {
                 return this._executeRequest(url, method, body);
             }
             this._reauth = false;
-            return this._formatTicket(await resp.json());
+            const json = await resp.json();
+            return exports.formatTicket(json);
         };
         this.anonymousAuth = () => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets/anonymousshopper`, 'GET');
         this.customerPasswordAuth = (request, ticket) => this._executeRequest(`${this._config.apiHost}/api/commerce/customer/authtickets`, 'POST', request, ticket === null || ticket === void 0 ? void 0 : ticket.accessToken);

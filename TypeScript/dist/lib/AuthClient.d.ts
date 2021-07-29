@@ -58,12 +58,12 @@ export interface FetchOptions {
     agent?: any;
     [x: string]: any;
 }
+export declare const formatTicket: (auth: UserAuthTicket) => UserAuthTicket;
 export default class AuthClient {
     private _authClientTicket;
     private _reauth;
     private _config;
     private _ensureAuthTicket;
-    private _formatTicket;
     private _executeRequest;
     constructor(config: KiboApolloApiConfig);
     anonymousAuth: () => Promise<UserAuthTicket>;

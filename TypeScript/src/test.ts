@@ -1,6 +1,8 @@
 import gql from 'graphql-tag';
 import { CreateApolloClient } from '.';
 import { UserAuthTicket } from './lib/AuthClient';
+import fs from 'fs';
+
 const addToCurrentCartQuery = gql`
 mutation addToCart($productToAdd:CartItem_Input!){
     addItemToCurrentCart(cartItem_Input: $productToAdd) {
@@ -40,23 +42,32 @@ function buildAddToCartVariables(productCode="", quantity=1) {
         }
     }
 }
+let ticket: UserAuthTicket | undefined = undefined;
+function readLocalTicket() {  
+  if (fs.existsSync('access_token.json')) {
+    let localTicket = fs.readFileSync('access_token.json', 'utf8');
+    if (localTicket) ticket = JSON.parse(localTicket);
+  }
+}
+
 (async function() {
-  let rawTicket: string = "";
-  let ticket: UserAuthTicket | undefined = undefined;
+  readLocalTicket();
   let clientAuthHooks = {
     onTicketChange: (authTicket: UserAuthTicket) => {
       if (!ticket || ticket.accessToken !== authTicket.accessToken) {
         ticket = authTicket;
+        fs.writeFileSync('access_token.json', JSON.stringify(authTicket));
       }
     },
     onTicketRead: () => {
       if(!ticket){
-        console.log('no ticket')
+        readLocalTicket();
       }
       return ticket as UserAuthTicket;
     },
     onTicketRemove: () => {
       ticket = undefined;
+      fs.rmSync('access_token.json');
     }
   }
   const at_url = "https://home.dev07.kubedev.kibo-dev.com/api/platform/applications/authtickets/oauth"
@@ -70,6 +81,10 @@ function buildAddToCartVariables(productCode="", quantity=1) {
     const apolloClient = CreateApolloClient({
       api: cfg,
       clientAuthHooks
+    });
+    apolloClient.loginCustomerAndSetAuthTicket({
+      username: 'colemcmannus@gmail.com',
+      password: 'Kibo1!'
     });
     const results = await apolloClient.query({
       query: gql`

@@ -81,6 +81,15 @@ const addProxy = (options: FetchOptions, atUrl: string): FetchOptions => {
   return options;
 }
 
+export const formatTicket: (auth: UserAuthTicket) => UserAuthTicket = (auth) => {
+  auth.accessTokenExpiration = new Date(auth.accessTokenExpiration);
+  auth.refreshTokenExpiration = new Date(auth.refreshTokenExpiration);
+  if (auth.jwtAccessToken && typeof auth.jwtAccessToken === "string") {
+    auth.parsedJWT = jwt_decode(auth.jwtAccessToken) as KiboJWT;
+  }  
+  return auth;
+}
+
 export default class AuthClient {
   private _authClientTicket: AppAuthTicket | null = null;
   private _reauth: boolean = false;
@@ -111,16 +120,6 @@ export default class AuthClient {
     }
   };
 
-  private _formatTicket: (auth: UserAuthTicket) => UserAuthTicket = (auth) => {
-    auth.accessTokenExpiration = new Date(auth.accessTokenExpiration);
-    auth.refreshTokenExpiration = new Date(auth.refreshTokenExpiration);
-    if (auth.jwtAccessToken && typeof auth.jwtAccessToken === "string") {
-      auth.parsedJWT = jwt_decode(auth.jwtAccessToken) as KiboJWT;
-    }
-    
-    return auth;
-  }
-
   private _executeRequest: (url: string, method: string, body?: any, userToken?: string) => Promise<any> = async (url, method, body, userToken) => {
     await this._ensureAuthTicket();
     const options: FetchOptions = {
@@ -145,8 +144,10 @@ export default class AuthClient {
       return this._executeRequest(url, method, body);
     }
     this._reauth = false;
+
+    const json = await resp.json();
   
-    return this._formatTicket(await resp.json() as UserAuthTicket);
+    return formatTicket(json as UserAuthTicket);
   }
 
   constructor(config: KiboApolloApiConfig) {
