@@ -63,7 +63,6 @@ export default class AuthClient {
     private _reauth;
     private _config;
     private _ensureAuthTicket;
-    private _formatTicket;
     private _executeRequest;
     constructor(config: KiboApolloApiConfig);
     anonymousAuth: () => Promise<UserAuthTicket>;

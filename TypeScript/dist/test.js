@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const graphql_tag_1 = __importDefault(require("graphql-tag"));
 const _1 = require(".");
+const fs_1 = __importDefault(require("fs"));
 const addToCurrentCartQuery = graphql_tag_1.default `
 mutation addToCart($productToAdd:CartItem_Input!){
     addItemToCurrentCart(cartItem_Input: $productToAdd) {
@@ -43,24 +44,33 @@ function buildAddToCartVariables(productCode = "", quantity = 1) {
         }
     };
 }
+let ticket = undefined;
+function readLocalTicket() {
+    if (fs_1.default.existsSync('access_token.json')) {
+        let localTicket = fs_1.default.readFileSync('access_token.json', 'utf8');
+        if (localTicket)
+            ticket = JSON.parse(localTicket);
+    }
+}
 (async function () {
     var _a, _b, _c;
-    let rawTicket = "";
-    let ticket = undefined;
+    readLocalTicket();
     let clientAuthHooks = {
         onTicketChange: (authTicket) => {
             if (!ticket || ticket.accessToken !== authTicket.accessToken) {
                 ticket = authTicket;
+                fs_1.default.writeFileSync('access_token.json', JSON.stringify(authTicket));
             }
         },
         onTicketRead: () => {
             if (!ticket) {
-                console.log('no ticket');
+                readLocalTicket();
             }
             return ticket;
         },
         onTicketRemove: () => {
             ticket = undefined;
+            fs_1.default.rmSync('access_token.json');
         }
     };
     const at_url = "https://home.dev07.kubedev.kibo-dev.com/api/platform/applications/authtickets/oauth";
@@ -74,6 +84,10 @@ function buildAddToCartVariables(productCode = "", quantity = 1) {
         const apolloClient = _1.CreateApolloClient({
             api: cfg,
             clientAuthHooks
+        });
+        apolloClient.loginCustomerAndSetAuthTicket({
+            username: 'colemcmannus@gmail.com',
+            password: 'Kibo1!'
         });
         const results = await apolloClient.query({
             query: graphql_tag_1.default `
