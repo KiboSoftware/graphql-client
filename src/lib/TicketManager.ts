@@ -1,5 +1,6 @@
-import { UserAuthTicket } from './AuthClient'
+import { KiboJWT, UserAuthTicket } from './AuthClient'
 import AuthClient from './AuthClient';
+import jwt_decode from 'jwt-decode';
 
 export interface TicketStorageManager {
   ticketFetcher: (client: AuthClient) => Promise<UserAuthTicket>;
@@ -14,6 +15,15 @@ export interface TicketManagerOptions {
   ticket?: UserAuthTicket;
 }
 
+const formatTicket: (auth: UserAuthTicket) => UserAuthTicket = (auth) => {
+  auth.accessTokenExpiration = new Date(auth.accessTokenExpiration);
+  auth.refreshTokenExpiration = new Date(auth.refreshTokenExpiration);
+  if (auth.jwtAccessToken && typeof auth.jwtAccessToken === "string") {
+    auth.parsedJWT = jwt_decode(auth.jwtAccessToken) as KiboJWT;
+  }  
+  return auth;
+}
+
 export default class TicketManager {
   /// Private Fields
   private _authClient: AuthClient;
@@ -25,7 +35,7 @@ export default class TicketManager {
   constructor(options: TicketManagerOptions) {
     this._authClient = options.authClient;
     this._storageManager = options.storageManager;
-    if (options.ticket) this._authTicket = options.ticket;
+    if (options.ticket) this._authTicket = formatTicket(options.ticket);
   }
 
   /// Private Methods
@@ -55,38 +65,38 @@ export default class TicketManager {
 
     if (this._ticketRefreshPromise) return this._ticketRefreshPromise;
     this._ticketRefreshPromise = this._authClient.refreshUserAuth(authTicket);
-    return this._ticketRefreshPromise.then(resp => {
-      this._ticketRefreshPromise = undefined;
-      return resp;
-    }).catch(err => {
-      this._ticketRefreshPromise = undefined;
+    return this._ticketRefreshPromise.catch(err => {
       throw err;
+    }).finally(() => {
+      this._ticketRefreshPromise = undefined;
     })
   }
 
   private _refreshTicket: (authTicket?: UserAuthTicket) => Promise<UserAuthTicket> = async authTicket => {
     if (!this._authClient) return Promise.reject('No implementation for AuthClient provided.');
 
-    const refresh = (authTicket !== null && authTicket !== undefined && authTicket.refreshToken && new Date() < authTicket.refreshTokenExpiration);
+    let newTicketPromise;
 
-    const newTicketPromise = refresh && authTicket !== null && authTicket !== undefined ?
-      this._performTicketRefresh(authTicket) :
-      this._performTicketFetch();
+    if (authTicket !== null && authTicket !== undefined) {
+      if (authTicket.refreshToken && new Date() < authTicket.refreshTokenExpiration) {
+        newTicketPromise = this._performTicketRefresh(authTicket);
+      } else {
+        newTicketPromise = this._performTicketFetch();
+      }
+    } else {
+      newTicketPromise = this._performTicketFetch();
+    }
+      
     return newTicketPromise.then(ticket => {
-      this._authTicket = ticket;
-
-      if (this._storageManager?.onTicketRefreshed) this._storageManager.onTicketRefreshed(ticket);
-
-      return ticket;
-    }).then(ticket => {
+      if (this._storageManager?.onTicketRefreshed) this._storageManager.onTicketRefreshed(ticket);      
       return this.setTicket(ticket);
-    })
+    });
   }
 
   /// Public Methods
   setTicket: (authTicket: UserAuthTicket) => UserAuthTicket = authTicket => {
     this._validateTicket(authTicket);
-    this._authTicket = authTicket;
+    this._authTicket = formatTicket(authTicket);
     this._storageManager?.onTicketChanged?.(authTicket);
     return authTicket;
   }
