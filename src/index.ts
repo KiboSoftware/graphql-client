@@ -135,9 +135,9 @@ export function CreateApolloClient(config: KiboApolloClientConfig): KiboApolloCl
 
     return {
       headers: {
-        ...headers,
         Authorization: `Bearer ${appToken}`,
-        'x-vol-user-claims': currentTicket?.accessToken
+        'x-vol-user-claims': currentTicket?.accessToken,
+        ...headers
       }
     }
   });
