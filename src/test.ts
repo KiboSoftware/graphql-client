@@ -4,8 +4,8 @@ import { UserAuthTicket } from './lib/AuthClient';
 import fs from 'fs';
 
 const addToCurrentCartQuery = gql`
-mutation addToCart($productToAdd:CartItem_Input!){
-    addItemToCurrentCart(cartItem_Input: $productToAdd) {
+mutation addToCart($productToAdd:CartItemInput!){
+    addItemToCurrentCart(cartItemInput: $productToAdd) {
       id
     }
 }`
@@ -46,7 +46,9 @@ let ticket: UserAuthTicket | undefined = undefined;
 function readLocalTicket() {  
   if (fs.existsSync('access_token.json')) {
     let localTicket = fs.readFileSync('access_token.json', 'utf8');
-    if (localTicket) ticket = JSON.parse(localTicket);
+    console.log(localTicket);
+    if (localTicket) ticket = JSON.parse(Buffer.from(localTicket, 'base64').toString('ascii'));
+    console.log(ticket);
   }
 }
 
@@ -56,13 +58,14 @@ function readLocalTicket() {
     onTicketChange: (authTicket: UserAuthTicket) => {
       if (!ticket || ticket.accessToken !== authTicket.accessToken) {
         ticket = authTicket;
-        fs.writeFileSync('access_token.json', JSON.stringify(authTicket));
+        console.log(ticket);
+        fs.writeFileSync('access_token.json', Buffer.from(JSON.stringify(authTicket)).toString('base64'));
       }
     },
     onTicketRead: () => {
       if(!ticket){
         readLocalTicket();
-      }
+      }      
       return ticket as UserAuthTicket;
     },
     onTicketRemove: () => {

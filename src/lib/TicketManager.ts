@@ -1,6 +1,5 @@
-import { KiboJWT, UserAuthTicket } from './AuthClient'
+import { UserAuthTicket } from './AuthClient'
 import AuthClient from './AuthClient';
-import jwt_decode from 'jwt-decode';
 
 export interface TicketStorageManager {
   ticketFetcher: (client: AuthClient) => Promise<UserAuthTicket>;
@@ -18,9 +17,8 @@ export interface TicketManagerOptions {
 const formatTicket: (auth: UserAuthTicket) => UserAuthTicket = (auth) => {
   auth.accessTokenExpiration = new Date(auth.accessTokenExpiration);
   auth.refreshTokenExpiration = new Date(auth.refreshTokenExpiration);
-  if (auth.jwtAccessToken && typeof auth.jwtAccessToken === "string") {
-    auth.parsedJWT = jwt_decode(auth.jwtAccessToken) as KiboJWT;
-  }  
+  delete auth.jwtAccessToken;
+  delete auth.userId;
   return auth;
 }
 
