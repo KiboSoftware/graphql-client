@@ -8,7 +8,7 @@
     "test": "node dist/test.js",
     "pretest": "tsc",
     "build": "tsc",
-    "publish": "npm run build && npm publish"
+    "release": "npm run build && npm publish"
   },
   "author": "Kibo Software",
   "license": "ISC",
