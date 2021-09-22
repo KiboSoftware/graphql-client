@@ -17,7 +17,7 @@ To create an instance of the graphql client, the following configuration is requ
 
 ```json
 {
-    "accessTokenUrl": "https://home.dev07.kubedev.kibo-dev.com/api/platform/applications/authtickets/oauth",
+    "accessTokenUrl": "https://home.mozu.com/api/platform/applications/authtickets/oauth",
     "clientId": "KIBO_APP.1.0.0.Release",
     "sharedSecret": "12345_Secret",
     "apiHost": "https://kibo-site.com"
