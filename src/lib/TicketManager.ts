@@ -18,7 +18,6 @@ const formatTicket: (auth: UserAuthTicket) => UserAuthTicket = (auth) => {
   auth.accessTokenExpiration = new Date(auth.accessTokenExpiration);
   auth.refreshTokenExpiration = new Date(auth.refreshTokenExpiration);
   delete auth.jwtAccessToken;
-  delete auth.userId;
   return auth;
 }
 
