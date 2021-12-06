@@ -4,14 +4,17 @@ import {
   getProxyAgent,
   calculateTicketExpiration,
   isValidConfig,
+  makeKiboAPIHeaders,
+  getKiboHostedConfig
 } from "../../src/lib/util";
-
+import { mozuHosted } from '../fixtures'
 describe("kibo graphql client utils ", () => {
   beforeAll(() => {
     process.env.HTTPS_PROXY = "https://localhost:1234";
   });
   afterAll(() => {
     process.env.HTTPS_PROXY = undefined;
+    delete process.env.mozuHosted;
   });
   it("should get fully qualified host from url", () => {
     const authURL =
@@ -62,4 +65,45 @@ describe("kibo graphql client utils ", () => {
     const isValid = isValidConfig({ api: { apiHost: "api", authHost: 'auth', clientId: 'client', sharedSecret: 'secret'}} as any);
     expect(isValid).toBeTruthy()
   });
+
+  it("should check if create kibo api headers from hosted config", () => {
+      const kiboHostedConfig = {
+        "app-claims":"WOeFU9J89c2BkxqTX3y==",
+        "user-claims": "i2YAJXACP3",
+        tenant: "30294",
+        site: "50525",
+        "master-catalog": "1",
+        catalog: "1",
+        "dataview-mode": "Live"
+      }
+      const expected = {
+        "x-vol-app-claims":"WOeFU9J89c2BkxqTX3y==",
+        "x-vol-user-claims": "i2YAJXACP3",
+        "x-vol-tenant": "30294",
+        "x-vol-site": "50525",
+        "x-vol-master-catalog": "1",
+        "x-vol-catalog": "1"
+      }
+      const apiHeaders = makeKiboAPIHeaders(kiboHostedConfig)
+      expect(apiHeaders).toEqual(expected)
+  })
+  it("should parse mozu hosted env variables", () => {
+
+    process.env.mozuHosted = mozuHosted;
+    const expected = {
+      baseUrl: "https://test-rp",
+      basePciUrl: "https://payments-sb.mozu.com",
+      tenantPod: "https://test-rp",
+      "app-claims":"WOeFU9J89c2BkxqTX3y==",
+      "user-claims": "i2YAJXACP3",
+      tenant: "30294",
+      site: "50525",
+      "master-catalog": "1",
+      catalog: "1",
+      "dataview-mode": "Live",
+    };
+    const hostedConfig = getKiboHostedConfig()
+
+    expect(hostedConfig).toEqual(expected);
+  })
 });

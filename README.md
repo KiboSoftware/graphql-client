@@ -46,7 +46,7 @@ const client = CreateApolloClient({
         apiHost
     }
 });
-const query = `query getProduct($productCode: String){
+const query = gql`query getProduct($productCode: String){
   product(productCode:$productCode){
     productCode
   }
@@ -98,7 +98,7 @@ const client = CreateApolloClient({
     clientAuthHooks
 });
 
-const query = `query getCurrentCart {
+const query = gql`query getCurrentCart {
     currentCart {
         total
     }
@@ -107,6 +107,49 @@ const query = `query getCurrentCart {
 const { data } = await client.query({ query });
 
 ```
+
+## Override Headers per Request
+
+Headers can be overridden per request by providing a headers object with key-value pairs (header name and header value) to the query/mutation context object
+
+Example to remove a Shoppers Auth Claim for a single request 
+```jsx
+
+import { CreateApolloClient } from '@kibocommerce/graphql-client';
+
+const client = CreateApolloClient();
+const query = gql`query getCurrentCart {
+    currentCart {
+        total
+    }
+}`
+const { data } = await client.query({
+    query,
+    context: {
+      headers: {
+        'x-vol-user-claims': null
+      }
+    }
+  });
+```
+
+## Use inside Kibo's ArcJS Framework (API Extensions)
+
+When using this package inside of Kibo's ArcJS framework, the API config and Auth hooks are no longer required to create a client instance. Instead the API config will be handled automatically based on the executing environment context and the Shopper authentication will be re-used based on the executing Arc API action (when available). Any API config parameters or auth hooks passed to the CreateApolloClient function will simply be ignored.
+
+```jsx
+// Arc.JS Action
+import { CreateApolloClient } from '@kibocommerce/graphql-client';
+
+const client = CreateApolloClient();
+const query = gql`query getCurrentCart {
+    currentCart {
+        total
+    }
+}`
+const { data } = await client.query({ query });
+```
+
 
 ## Proxy Requests in Development
 

@@ -3,7 +3,7 @@ import { onError } from "apollo-link-error";
 import type { RetryFunction } from "apollo-link-retry/lib/retryFunction";
 import { setContext } from "apollo-link-context";
 import { ApolloLink } from "apollo-link";
-import { getProxyAgent } from "./util";
+import { getKiboHostedConfig, getProxyAgent, makeKiboAPIHeaders } from "./util";
 import type { APIAuthenticationFetcher } from "../types";
 
 export function getHttpLink(apiHost: string) {
@@ -78,6 +78,19 @@ export function getShopperAuthLink(shopperAuthClient: any): ApolloLink {
     return {
       headers: {
         "x-vol-user-claims": shopperAccessToken,
+        ...headers,
+      },
+    };
+  });
+}
+
+export function getKiboHostedAuthLink(): ApolloLink {
+  const config = getKiboHostedConfig();
+  const kiboAPIHeaders = makeKiboAPIHeaders(config);
+  return setContext(async (request, { headers }) => {
+    return {
+      headers: {
+        ...kiboAPIHeaders,
         ...headers,
       },
     };
