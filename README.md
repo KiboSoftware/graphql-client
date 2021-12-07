@@ -17,14 +17,14 @@ To create an instance of the graphql client, the following configuration is requ
 
 ```json
 {
-    "accessTokenUrl": "https://home.mozu.com/api/platform/applications/authtickets/oauth",
+    "authHost": "https://home.mozu.com/",
     "clientId": "KIBO_APP.1.0.0.Release",
     "sharedSecret": "12345_Secret",
-    "apiHost": "https://kibo-site.com"
+    "apiHost": "https://t1234-s1234.sandbox.mozu.com"
 }
 ```
-- `apiHost` - link to your Kibo Commerce GraphQL API instance.
-- `accessTokenUrl` - link to Kibo Commerce Authentication Server. It is used to request an access token from Kibo Commerce OAuth 2.0 service.
+- `apiHost` - Host Url to your Kibo Commerce API.
+- `authHost` - Host Url to Kibo Commerce Authentication Server. It is used to request an access token from Kibo Commerce OAuth 2.0 service. Production and Production sandbox, use `https://home.mozu.com/`
 - `clientId` - Unique Application (Client) ID of your Application
 - `sharedSecret` - Secret API key used to authenticate application. Viewable from your [Kibo eCommerce Dev Center](https://mozu.com/login)
 
