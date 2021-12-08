@@ -5,7 +5,6 @@ import { CreateApolloClient } from "../../src/";
 import { mozuHosted } from "../fixtures";
 
 describe("integration client test", () => {
-  beforeAll(() => {});
   beforeEach(() => {
     delete process.env.mozuHosted;
   });

@@ -100,3 +100,10 @@ export const makeKiboAPIHeaders = (kiboHostedConfig: any) => {
     return accum;
   }, {});
 };
+
+export const getApiConfigFromEnv = () => ({
+    clientId: process.env.KIBO_CLIENT_ID as string,
+    sharedSecret: process.env.KIBO_SHARED_SECRET as string,
+    authHost: process.env.KIBO_AUTH_URL as string,
+    apiHost: process.env.KIBO_API_URL as string,
+})

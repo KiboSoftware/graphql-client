@@ -59,4 +59,16 @@ describe("integration client test", () => {
     expect(configWithHook.clientAuthHooks.onTicketRead).toBeCalled();
     expect(configWithHook.clientAuthHooks.onTicketChange).toBeCalled();
   });
+  it("should create client from env variables",  async () => {
+      const client = CreateApolloClient();
+      const query = gql`
+        query {
+          products {
+            startIndex
+          }
+        }
+      `;
+      const response = await client.query({ query });
+      expect(response.data.products.startIndex).toBe(0);
+  })
 });

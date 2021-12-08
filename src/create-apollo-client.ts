@@ -6,7 +6,7 @@ import { ApiAuthCache } from "./lib/api-auth-cache";
 import { APIAuthClient } from "./lib/api-auth-client";
 import { ShopperAuthClient } from "./lib/shopper-auth-client";
 import { ShopperAuthManager } from "./lib/shopper-auth-handler";
-import { getHostFromUrl, isValidConfig } from "./lib/util";
+import { getHostFromUrl, isValidConfig, getApiConfigFromEnv } from "./lib/util";
 import {
   getAPIAuthLink,
   getHttpLink,
@@ -22,8 +22,9 @@ import type {
 
 const apiAuthTicketCache = new ApiAuthCache("API_AUTH");
 
-export function CreateApolloClient(config: KiboApolloClientConfig): any {
-  if (!isValidConfig(config)) {
+export function CreateApolloClient(config?: KiboApolloClientConfig): any {
+  config = config || { api: getApiConfigFromEnv() }
+  if(!isValidConfig(config)){
     throw new Error("Invalid API config provided to Kibo CreateApolloClient");
   }
   const { api: apiConfig } = config;

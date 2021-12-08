@@ -1,5 +1,12 @@
 import { CreateApolloClient } from "../../src/create-apollo-client";
-import { getMockAuthHooks } from "../fixtures";
+import { apiConfig, getMockAuthHooks } from "../fixtures";
+import { getHostFromUrl, isValidConfig, getApiConfigFromEnv } from "../../src/lib/util";
+
+jest.mock("../../src/lib/util", () => ({
+  getHostFromUrl: jest.fn(),
+  isValidConfig: jest.fn(() => true),
+  getApiConfigFromEnv: jest.fn(() => apiConfig)
+}));
 
 describe("Create Apollo Client", () => {
   beforeAll(() => {
@@ -7,29 +14,24 @@ describe("Create Apollo Client", () => {
   });
   it("should create apollo client without auth hooks", async () => {
     const config = {
-      api: {
-        authHost: "host",
-        clientId: "app",
-        sharedSecret: "123",
-        apiHost: "api-host",
-      },
+      api: apiConfig,
     } as any;
     const client = CreateApolloClient(config);
   });
 
   it("should create apollo client with auth hooks", () => {
     const config = {
-      api: {
-        authHost: "host",
-        clientId: "app",
-        sharedSecret: "123",
-        apiHost: "api-host",
-      },
+      api: apiConfig,
       clientAuthHooks: getMockAuthHooks(),
     } as any;
     const clientWithHooks = CreateApolloClient(config)
     expect(clientWithHooks.shopperAuthManager).toBeTruthy()
   });
+
+  it('should create client using env vars', () => {
+    const client = CreateApolloClient()
+    expect(getApiConfigFromEnv).toBeCalled()
+  })
   afterAll(() => {
     jest.disableAutomock();
   });

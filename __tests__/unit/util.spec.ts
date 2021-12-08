@@ -5,7 +5,8 @@ import {
   calculateTicketExpiration,
   isValidConfig,
   makeKiboAPIHeaders,
-  getKiboHostedConfig
+  getKiboHostedConfig,
+  getApiConfigFromEnv
 } from "../../src/lib/util";
 import { mozuHosted } from '../fixtures'
 describe("kibo graphql client utils ", () => {
@@ -105,5 +106,24 @@ describe("kibo graphql client utils ", () => {
     const hostedConfig = getKiboHostedConfig()
 
     expect(hostedConfig).toEqual(expected);
+  })
+
+  it('should create apollo client config from standard kibo env variables', () => {
+    
+    process.env.KIBO_CLIENT_ID = 'client';
+    process.env.KIBO_SHARED_SECRET = 'secret';
+    process.env.KIBO_AUTH_URL = 'auth-url';
+    process.env.KIBO_API_URL = 'api-url';
+
+    const expected = {
+      clientId: "client",
+      sharedSecret: "secret",
+      authHost: "auth-url",
+      apiHost: "api-url",
+    }
+    
+    const config = getApiConfigFromEnv()
+    
+    expect(config).toEqual(expected)
   })
 });
