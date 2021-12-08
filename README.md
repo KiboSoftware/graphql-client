@@ -13,40 +13,64 @@ npm install @kibocommerce/graphql-client
 ```
 
 ## Configuration
-To create an instance of the graphql client, the following configuration is required: 
 
-```json
-{
-    "authHost": "https://home.mozu.com/",
-    "clientId": "KIBO_APP.1.0.0.Release",
-    "sharedSecret": "12345_Secret",
-    "apiHost": "https://t1234-s1234.sandbox.mozu.com"
-}
-```
-- `apiHost` - Host Url to your Kibo Commerce API.
-- `authHost` - Host Url to Kibo Commerce Authentication Server. It is used to request an access token from Kibo Commerce OAuth 2.0 service. Production and Production sandbox, use `https://home.mozu.com/`
+The following data is required to configure the Kibo Apollo Client, when using the library outside of Kibo's API Extensions Framework (ArcJS):
+
+- `apiHost` - Your Kibo Commerce API Host.
+- `authHost` - Kibo Commerce Authentication Host Server. It is used to request an access token from Kibo Commerce OAuth 2.0 service. Production and Production sandbox, use `home.mozu.com`
 - `clientId` - Unique Application (Client) ID of your Application
 - `sharedSecret` - Secret API key used to authenticate application. Viewable from your [Kibo eCommerce Dev Center](https://mozu.com/login)
 
 Visit [Kibo documentation](https://apidocs.kibong-perf.com/?spec=graphql#auth) for more details on API authentication
 
-
 Based on the config, this package will handle Authenticating your application against the Kibo API.
  
-## Basic Usage
+#### API Configuration via Environment Variables
+
+Set the following environment variables: 
+
+```bash
+KIBO_API_HOST=t1234-s1234.sandbox.mozu.com
+KIBO_AUTH_HOST=home.mozu.com
+KIBO_CLIENT_ID=KIBO_APP.1.0.0.Release
+KIBO_SHARED_SECRET=12345_Secret
+```
+
+Create a client instance:
+
+```jsx
+import { CreateApolloClient } from '@kibocommerce/graphql-client';
+
+const client = CreateApolloClient();
+
+```
+
+#### API Configuration via function arguments
+
+For environments where you are unable to set environment variables, the API configuration can be passed to the CreateApolloClient call
 
 ```jsx
 import { CreateApolloClient } from '@kibocommerce/graphql-client';
 
 const client = CreateApolloClient({
     api: {
-        accessTokenUrl,
-        clientId,
-        sharedSecret,
-        apiHost
+        apiHost: "home.mozu.com"
+        authHost: "t1234-s1234.sandbox.mozu.com",
+        clientId: "KIBO_APP.1.0.0.Release",
+        sharedSecret: "12345_Secret",        
     }
 });
-const query = gql`query getProduct($productCode: String){
+
+```
+ 
+## Basic Usage
+
+```jsx
+import { CreateApolloClient } from '@kibocommerce/graphql-client';
+
+const client = CreateApolloClient();
+
+const query = gql`query getProduct($productCode: String) {
   product(productCode:$productCode){
     productCode
   }
@@ -93,10 +117,7 @@ const clientAuthHooks = {
     }
 }
 
-const client = CreateApolloClient({
-    api: config,
-    clientAuthHooks
-});
+const client = CreateApolloClient({ clientAuthHooks });
 
 const query = gql`query getCurrentCart {
     currentCart {
@@ -118,6 +139,7 @@ Example to remove a Shoppers Auth Claim for a single request
 import { CreateApolloClient } from '@kibocommerce/graphql-client';
 
 const client = CreateApolloClient();
+
 const query = gql`query getCurrentCart {
     currentCart {
         total

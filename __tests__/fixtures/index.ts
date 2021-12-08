@@ -1,8 +1,8 @@
 export const apiConfig = {
-  authHost: process.env.KIBO_AUTH_URL,
+  authHost: process.env.KIBO_AUTH_HOST,
   clientId: process.env.KIBO_CLIENT_ID,
   sharedSecret: process.env.KIBO_SHARED_SECRET,
-  apiHost: process.env.KIBO_API_URL,
+  apiHost: process.env.KIBO_API_HOST,
 };
 
 export function getMockFetcher(mockAuthTicket: any) {

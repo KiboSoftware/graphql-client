@@ -100,10 +100,22 @@ export const makeKiboAPIHeaders = (kiboHostedConfig: any) => {
     return accum;
   }, {});
 };
+const protocolRegx = new RegExp(/https?:\/\//)
+export const addProtocolToHost = (hostname: string | undefined) => 
+  hostname && !hostname.match(protocolRegx) ? `https://${hostname}` : hostname
+
+export const formatConfigHostnames = (config: any): any => {
+  const { apiHost, authHost, ...creds } = config;
+  return {
+    apiHost: addProtocolToHost(apiHost),
+    authHost: addProtocolToHost(authHost),
+    ...creds
+  }
+}
 
 export const getApiConfigFromEnv = () => ({
     clientId: process.env.KIBO_CLIENT_ID as string,
     sharedSecret: process.env.KIBO_SHARED_SECRET as string,
-    authHost: process.env.KIBO_AUTH_URL as string,
-    apiHost: process.env.KIBO_API_URL as string,
+    authHost: process.env.KIBO_AUTH_HOST as string,
+    apiHost: process.env.KIBO_API_HOST as string,
 })

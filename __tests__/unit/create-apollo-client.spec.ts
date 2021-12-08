@@ -1,11 +1,12 @@
 import { CreateApolloClient } from "../../src/create-apollo-client";
 import { apiConfig, getMockAuthHooks } from "../fixtures";
-import { getHostFromUrl, isValidConfig, getApiConfigFromEnv } from "../../src/lib/util";
+import { getHostFromUrl, isValidConfig, getApiConfigFromEnv, formatConfigHostnames } from "../../src/lib/util";
 
 jest.mock("../../src/lib/util", () => ({
   getHostFromUrl: jest.fn(),
   isValidConfig: jest.fn(() => true),
-  getApiConfigFromEnv: jest.fn(() => apiConfig)
+  getApiConfigFromEnv: jest.fn(() => apiConfig),
+  formatConfigHostnames: jest.fn(params => params)
 }));
 
 describe("Create Apollo Client", () => {

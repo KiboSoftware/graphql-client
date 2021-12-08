@@ -6,7 +6,9 @@ import {
   isValidConfig,
   makeKiboAPIHeaders,
   getKiboHostedConfig,
-  getApiConfigFromEnv
+  getApiConfigFromEnv,
+  addProtocolToHost,
+  formatConfigHostnames
 } from "../../src/lib/util";
 import { mozuHosted } from '../fixtures'
 describe("kibo graphql client utils ", () => {
@@ -112,8 +114,8 @@ describe("kibo graphql client utils ", () => {
     
     process.env.KIBO_CLIENT_ID = 'client';
     process.env.KIBO_SHARED_SECRET = 'secret';
-    process.env.KIBO_AUTH_URL = 'auth-url';
-    process.env.KIBO_API_URL = 'api-url';
+    process.env.KIBO_AUTH_HOST = 'auth-url';
+    process.env.KIBO_API_HOST = 'api-url';
 
     const expected = {
       clientId: "client",
@@ -126,4 +128,28 @@ describe("kibo graphql client utils ", () => {
     
     expect(config).toEqual(expected)
   })
+
+  it('should add https protocol to hostname', () => {
+    const hostname = 'kibocommerce.com'
+    const url = addProtocolToHost(hostname)
+    expect(url).toEqual('https://kibocommerce.com')
+  })
+
+  it('should format all host names in config', () => {
+    const config = {
+      clientId: "client",
+      sharedSecret: "secret",
+      authHost: "auth-url",
+      apiHost: "api-url",
+    }
+    const expected = {
+      clientId: "client",
+      sharedSecret: "secret",
+      authHost: "https://auth-url",
+      apiHost: "https://api-url",
+    }
+    const actual = formatConfigHostnames(config)
+    expect(actual).toEqual(expected)
+  })
+
 });
