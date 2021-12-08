@@ -133,9 +133,9 @@ const { data } = await client.query({
   });
 ```
 
-## Use inside Kibo's ArcJS Framework (API Extensions)
+## Use inside Kibo's API Extensions Framework (ArcJS)
 
-When using this package inside of Kibo's ArcJS framework, the API config and Auth hooks are no longer required to create a client instance. Instead the API config will be handled automatically based on the executing environment context and the Shopper authentication will be re-used based on the executing Arc API action (when available). Any API config parameters or auth hooks passed to the CreateApolloClient function will simply be ignored.
+When using this package inside of Kibo's API Extensions Framework (ArcJS), the API config and Auth hooks are no longer required to create a client instance. Instead the API config will be handled automatically based on the executing environment context and the Shopper authentication will be re-used based on the executing Arc API action (when available). Any API config parameters or auth hooks passed to the CreateApolloClient function will simply be ignored.
 
 ```jsx
 // Arc.JS Action
