@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 import nock from "nock";
 
-import { CreateApolloClient } from "../../src/create-apollo-client";
+import { CreateApolloClient } from "../../src/";
 import { apiConfig, authTicket, shopperAuthTicket } from "../fixtures";
 
 const configFixture = {
@@ -25,7 +25,6 @@ describe("integration client test", () => {
       .post("/graphql")
       .reply(200, queryResponse);
   });
-
   it("should query products", async () => {
     const client = CreateApolloClient(configFixture as any);
     const query = gql`

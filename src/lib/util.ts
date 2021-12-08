@@ -6,6 +6,19 @@ import type {
 import httpProxy from "http-proxy-agent";
 import httpsProxy from "https-proxy-agent";
 
+
+const constants = {
+  headerPrefix: "x-vol-",
+  headers: {
+    APPCLAIMS: "app-claims",
+    USERCLAIMS: "user-claims",
+    TENANT: "tenant",
+    SITE: "site",
+    MASTERCATALOG: "master-catalog",
+    CATALOG: "catalog",
+  },
+};
+
 export const calculateTicketExpiration = (kiboAuthTicket: AppAuthTicket) =>
   Date.now() + kiboAuthTicket.expires_in * 1000;
 
@@ -23,7 +36,7 @@ export const getProxyAgent = (): { agent: any } => {
 export const isValidConfig: (config: KiboApolloClientConfig) => boolean = (
   config
 ) => {
-  const { api: apiConfig } = config;
+  const { api: apiConfig } = config || {};
 
   if (
     !apiConfig ||
@@ -64,4 +77,26 @@ export const normalizeShopperAuthResponse = (
 export const isShopperAuthExpired = (userAuthTicket: UserAuthTicket) => {
   const { accessTokenExpiration } = userAuthTicket;
   return new Date(accessTokenExpiration).getTime() < Date.now();
+};
+
+export const getKiboHostedConfig = () => {
+  try {
+    return JSON.parse(process.env.mozuHosted as string).sdkConfig;
+  } catch (error) {
+    throw new Error(
+      "Error parsing Kibo Hosted environment variables: " + error.message
+    );
+  }
+};
+
+export const makeKiboAPIHeaders = (kiboHostedConfig: any) => {
+
+  return Object.values(constants.headers).reduce((accum: any, headerSuffix) => {
+    if (!kiboHostedConfig[headerSuffix]) {
+      return accum;
+    }
+    const headerName = `${constants.headerPrefix}${headerSuffix}`;
+    accum[headerName] = kiboHostedConfig[headerSuffix];
+    return accum;
+  }, {});
 };

@@ -23,6 +23,9 @@ import type {
 const apiAuthTicketCache = new ApiAuthCache("API_AUTH");
 
 export function CreateApolloClient(config: KiboApolloClientConfig): any {
+  if (!isValidConfig(config)) {
+    throw new Error("Invalid API config provided to Kibo CreateApolloClient");
+  }
   const { api: apiConfig } = config;
   // if no auth host provided, try to get from access token url
   if (!apiConfig.authHost && apiConfig.accessTokenUrl) {

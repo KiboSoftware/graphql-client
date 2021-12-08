@@ -17,14 +17,14 @@ To create an instance of the graphql client, the following configuration is requ
 
 ```json
 {
-    "accessTokenUrl": "https://home.mozu.com/api/platform/applications/authtickets/oauth",
+    "authHost": "https://home.mozu.com/",
     "clientId": "KIBO_APP.1.0.0.Release",
     "sharedSecret": "12345_Secret",
-    "apiHost": "https://kibo-site.com"
+    "apiHost": "https://t1234-s1234.sandbox.mozu.com"
 }
 ```
-- `apiHost` - link to your Kibo Commerce GraphQL API instance.
-- `accessTokenUrl` - link to Kibo Commerce Authentication Server. It is used to request an access token from Kibo Commerce OAuth 2.0 service.
+- `apiHost` - Host Url to your Kibo Commerce API.
+- `authHost` - Host Url to Kibo Commerce Authentication Server. It is used to request an access token from Kibo Commerce OAuth 2.0 service. Production and Production sandbox, use `https://home.mozu.com/`
 - `clientId` - Unique Application (Client) ID of your Application
 - `sharedSecret` - Secret API key used to authenticate application. Viewable from your [Kibo eCommerce Dev Center](https://mozu.com/login)
 
@@ -46,7 +46,7 @@ const client = CreateApolloClient({
         apiHost
     }
 });
-const query = `query getProduct($productCode: String){
+const query = gql`query getProduct($productCode: String){
   product(productCode:$productCode){
     productCode
   }
@@ -98,7 +98,7 @@ const client = CreateApolloClient({
     clientAuthHooks
 });
 
-const query = `query getCurrentCart {
+const query = gql`query getCurrentCart {
     currentCart {
         total
     }
@@ -107,6 +107,49 @@ const query = `query getCurrentCart {
 const { data } = await client.query({ query });
 
 ```
+
+## Override Headers per Request
+
+Headers can be overridden per request by providing a headers object with key-value pairs (header name and header value) to the query/mutation context object
+
+Example to remove a Shoppers Auth Claim for a single request 
+```jsx
+
+import { CreateApolloClient } from '@kibocommerce/graphql-client';
+
+const client = CreateApolloClient();
+const query = gql`query getCurrentCart {
+    currentCart {
+        total
+    }
+}`
+const { data } = await client.query({
+    query,
+    context: {
+      headers: {
+        'x-vol-user-claims': null
+      }
+    }
+  });
+```
+
+## Use inside Kibo's API Extensions Framework (ArcJS)
+
+When using this package inside of Kibo's API Extensions Framework (ArcJS), the API config and Auth hooks are no longer required to create a client instance. Instead the API config will be handled automatically based on the executing environment context and the Shopper authentication will be re-used based on the executing Arc API action (when available). Any API config parameters or auth hooks passed to the CreateApolloClient function will simply be ignored.
+
+```jsx
+// Arc.JS Action
+import { CreateApolloClient } from '@kibocommerce/graphql-client';
+
+const client = CreateApolloClient();
+const query = gql`query getCurrentCart {
+    currentCart {
+        total
+    }
+}`
+const { data } = await client.query({ query });
+```
+
 
 ## Proxy Requests in Development
 
