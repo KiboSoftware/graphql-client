@@ -1,6 +1,6 @@
 {
   "name": "@kibocommerce/graphql-client",
-  "version": "1.0.3-beta.6",
+  "version": "1.0.3-beta.8",
   "description": "Kibo Apollo Client for TypeScript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
