@@ -1,5 +1,5 @@
 import { APIAuthClient } from "../../src/lib/api-auth-client";
-import { getProxyAgent, calculateTicketExpiration } from "../../src/lib/util";
+import { getProxyAgent, calculateTicketExpiration, addProtocolToHost } from "../../src/lib/util";
 
 import { getMockFetcher, authTicket, expiredAuthTicket } from '../fixtures'
 
@@ -8,6 +8,7 @@ jest.mock("../../src/lib/util", () => ({
     (mockedTicket) => mockedTicket?.expires_at
   ),
   getProxyAgent: jest.fn(() => ({})),
+  addProtocolToHost: jest.fn(host => host)
 }));
 
 describe("kibo graphql client - api authentication client ", () => {

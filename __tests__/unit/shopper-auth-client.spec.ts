@@ -3,6 +3,7 @@ import {
   getProxyAgent,
   calculateTicketExpiration,
   normalizeShopperAuthResponse,
+  addProtocolToHost
 } from "../../src/lib/util";
 import {
   getMockFetcher,
@@ -14,6 +15,7 @@ jest.mock("../../src/lib/util", () => ({
   calculateTicketExpiration: jest.fn(),
   getProxyAgent: jest.fn(() => ({})),
   normalizeShopperAuthResponse: jest.fn((response) => response),
+  addProtocolToHost: jest.fn(host => host)
 }));
 
 const mockAPIAuthClient = {

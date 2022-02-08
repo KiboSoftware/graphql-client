@@ -6,7 +6,7 @@ import type {
   APIAuthenticationFetcher,
   UserAuthFetcher,
 } from "../types";
-import { getProxyAgent, normalizeShopperAuthResponse } from "./util";
+import { getProxyAgent, normalizeShopperAuthResponse, addProtocolToHost } from "./util";
 
 export class ShopperAuthClient implements UserAuthFetcher {
   private _apiHost: string;
@@ -31,7 +31,7 @@ export class ShopperAuthClient implements UserAuthFetcher {
         "Kibo Shopper Auth Client requires an API Authentication client"
       );
     }
-    this._apiHost = apiHost;
+    this._apiHost = addProtocolToHost(apiHost) as string;
     this._fetcher = fetcher;
     this._apiAuthClient = apiAuthClient;
   }
