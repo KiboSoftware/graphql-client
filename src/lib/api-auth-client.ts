@@ -5,7 +5,7 @@ import type {
   KiboApolloApiConfig,
   APIAuthenticationFetcher,
 } from "../types";
-import { getProxyAgent, calculateTicketExpiration } from "./util";
+import { getProxyAgent, calculateTicketExpiration, addProtocolToHost } from "./util";
 
 export class APIAuthClient implements APIAuthenticationFetcher {
   private _clientId: string;
@@ -31,7 +31,7 @@ export class APIAuthClient implements APIAuthenticationFetcher {
     }
     this._clientId = clientId;
     this._sharedSecret = sharedSecret;
-    this._authHost = authHost;
+    this._authHost = addProtocolToHost(authHost) as string;
     this._fetcher = fetcher;
 
     if (authTicketCache) {
