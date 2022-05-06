@@ -83,11 +83,14 @@ export class APIAuthClient implements APIAuthenticationFetcher {
   public async refreshTicket(kiboAuthTicket: AppAuthTicket) {
     // create oauth refresh fetch options
     const options = this._buildFetchOptions({
-      refreshToken: kiboAuthTicket?.refresh_token,
+      client_id: this._clientId,
+      client_secret: this._sharedSecret,
+      grant_type: "client_credentials",
+      refresh_token: kiboAuthTicket?.refresh_token,
     });
     // perform auth ticket refresh
     const refreshedTicket = await this._fetchAuthTicket(
-      `${this._authHost}/api/platform/applications/authtickets/refresh-ticket`,
+      `${this._authHost}/api/platform/applications/authtickets/oauth`,
       options
     );
     // set authentication ticket on next server runtime object
