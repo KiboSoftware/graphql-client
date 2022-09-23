@@ -54,8 +54,8 @@ import { CreateApolloClient } from '@kibocommerce/graphql-client';
 
 const client = CreateApolloClient({
     api: {
-        apiHost: "home.mozu.com"
-        authHost: "t1234-s1234.sandbox.mozu.com",
+        authHost: "home.mozu.com"
+        apiHost: "t1234-s1234.sandbox.mozu.com",
         clientId: "KIBO_APP.1.0.0.Release",
         sharedSecret: "12345_Secret",        
     }
@@ -63,25 +63,124 @@ const client = CreateApolloClient({
 
 ```
  
-## Basic Usage
+## Basic Usage Examples
 
-```jsx
+### Fetch Single Product
+
+```ts
 import { CreateApolloClient } from '@kibocommerce/graphql-client';
+import { gql } from 'graphql-tag';
 
 const client = CreateApolloClient();
 
-const query = gql`query getProduct($productCode: String) {
+const query = gql`query getProduct($productCode: String!) {
   product(productCode:$productCode){
     productCode
   }
 }`;
+
 const variables = {
     productId: "PROD-123"
 };
+
 const { data } = await client.query({  query, variables })
 ```
 
-## Authentication Hooks
+### Fetch Products
+
+```ts
+import { CreateApolloClient } from '@kibocommerce/graphql-client';
+import { gql } from 'graphql-tag';
+
+const client = CreateApolloClient();
+
+const query = gql`query getProduct($productCode: String!) {
+  product(productCode:$productCode){
+    productCode
+  }
+}`;
+
+const variables = {
+    productId: "PROD-123"
+};
+
+const { data } = await client.query({  query, variables })
+```
+### Search Products
+```ts 
+import { CreateApolloClient } from '@kibocommerce/graphql-client';
+import { gql } from 'graphql-tag';
+
+const client = CreateApolloClient();
+
+const query = gql`
+  query productSearch($query: String, $pageSize: Int, $startIndex: Int) {
+    productSearch(query: $query, startIndex: $startIndex, pageSize: $pageSize) {
+      items {
+        productCode
+      }
+    }
+  }
+`;
+
+const variables = {
+  query: 'jacket',
+  startIndex: 0,
+  pageSize: 10,
+};
+
+const { data } = await client.query({ query, variables });
+```
+### Fetch Categories
+```ts
+import { CreateApolloClient } from '@kibocommerce/graphql-client';
+import { gql } from 'graphql-tag';
+
+const client = CreateApolloClient();
+
+const query = gql`
+  query getCategories {
+    categories {
+      items {
+        categoryCode
+        content {
+          name
+        }
+      }
+    }
+  }
+`;
+
+const { data } = await client.query({ query });	
+```
+
+### Fetch Category By Code
+```ts
+import { CreateApolloClient } from '@kibocommerce/graphql-client';
+import { gql } from 'graphql-tag';
+
+const client = CreateApolloClient();
+
+const query = gql`
+  query getCategories($filter: String) {
+    categories(filter: $filter) {
+      items {
+        categoryCode
+        content {
+          name
+        }
+      }
+    }
+  }
+`;
+
+const variables = {
+    filter: 'categoryCode eq Shoes'
+}
+
+const { data } = await client.query({ query, variables });	
+```
+## Shopper Authentication Hooks
 
 Hooks can be provided to the ```CreateApolloClient``` method when creating an apollo client that will execute on Auth Ticket change, read and remove. 
 
@@ -102,6 +201,7 @@ These built in hooks allow customization on storage methods for the users auth t
 
 ```jsx
 import { CreateApolloClient } from '@kibocommerce/graphql-client';
+import { gql } from 'graphql-tag';
 
 let currentTicket = getUserAuthorizationFromCooke();
 const clientAuthHooks = {
@@ -134,9 +234,10 @@ const { data } = await client.query({ query });
 Headers can be overridden per request by providing a headers object with key-value pairs (header name and header value) to the query/mutation context object
 
 Example to remove a Shoppers Auth Claim for a single request 
-```jsx
-
+```ts
 import { CreateApolloClient } from '@kibocommerce/graphql-client';
+import { gql } from 'graphql-tag';
+
 
 const client = CreateApolloClient();
 
@@ -162,6 +263,7 @@ When using this package inside of Kibo's API Extensions Framework (ArcJS), the A
 ```jsx
 // Arc.JS Action
 import { CreateApolloClient } from '@kibocommerce/graphql-client';
+import { gql } from 'graphql-tag';
 
 const client = CreateApolloClient();
 const query = gql`query getCurrentCart {
