@@ -54,8 +54,8 @@ import { CreateApolloClient } from '@kibocommerce/graphql-client';
 
 const client = CreateApolloClient({
     api: {
-        apiHost: "home.mozu.com"
-        authHost: "t1234-s1234.sandbox.mozu.com",
+        authHost: "home.mozu.com"
+        apiHost: "t1234-s1234.sandbox.mozu.com",
         clientId: "KIBO_APP.1.0.0.Release",
         sharedSecret: "12345_Secret",        
     }
